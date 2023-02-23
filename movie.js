@@ -12,24 +12,32 @@ const fetchMovies = async () => {
   }
 };
 
-const renderMovies = (movies) => {
+const renderMovies = async (movies) => {
   const moviesContainer = document.getElementById("movies-container");
   moviesContainer.innerHTML = "";
+
+  // Fetch genres and create a map of genre ids to names
+  const genresResponse = await axios.get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${APIKEY}`);
+  const genresMap = new Map(genresResponse.data.genres.map(genre => [genre.id, genre.name]));
+
   movies.forEach((movie) => {
-    const movieElement = createMovieElement(movie);
+    const movieElement = createMovieElement(movie, genresMap);
     moviesContainer.appendChild(movieElement);
   });
 };
 
-const createMovieElement = (movie) => {
+const createMovieElement = (movie, genresMap) => {
   const movieElement = document.createElement("div");
   movieElement.classList.add("movie-tile");
+
+  // Replace genre ids with genre names
+  const genreNames = movie.genre_ids.map(id => genresMap.get(id)).join(", ");
 
   movieElement.innerHTML = `
     <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}">
     <h2>${movie.title} (${new Date(movie.release_date).getFullYear()})</h2>
     <p>${movie.overview}</p>
-    <p><strong>Genres:</strong> ${movie.genre_ids.join(", ")}</p>
+    <p><strong>Genres:</strong> ${genreNames}</p>
   `;
   return movieElement;
 };
